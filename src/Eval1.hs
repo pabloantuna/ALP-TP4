@@ -44,7 +44,7 @@ instance MonadState State where
   lookfor v = State (\s -> lookfor' v s :!: s)
     where
       lookfor' v s = fromJust $ M.lookup v s
-  update v i = State (\s -> () :!: update' v i s) where update' = M.insert
+  update v i = State (\s -> () :!: M.insert v i s)
 
 -- Ejercicio 1.b: Implementar el evaluador utilizando la monada State
 

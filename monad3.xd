@@ -1,0 +1,44 @@
+-- (monad.3)
+-- (t >>= f) >>= g = t >>= (λx → f x >>= g)
+
+(t >>= f) >>= g
+
+State (\s -> let v :!: s' = runState (t >>= f) s in runState (g v) s')
+State (\s -> let v :!: s' = (let vv :!: ss' = runState t s in runState (f vv) ss') in runState (g v) s')
+
+runState (t >>= f) s
+runState (State \ss -> let vv :!: ss' = runState t ss in runState (f vv) ss') s
+
+let vv :!: ss' = runState t s in runState (f vv) ss'
+
+-------
+
+t >>= (\x -> f x >>= g)
+
+State (\s -> let (v :!: s') = runState t s in runState ((\x -> f x >>= g) v) s')
+
+State (\s -> let (v :!: s') = runState t s in runState (f v >>= g) s')
+
+State (\s -> let (v :!: s') = runState t s in runState (let (vvv :!: sss') = runState (f v) s' in (g vvv) sss'))
+
+------------------------------------
+
+1| State (\s -> let v :!: s' = (let vv :!: ss' = runState t s in runState (f vv) ss') in runState (g v) s')
+2| State (\s -> let (v :!: s') = runState t s in runState (let (vvv :!: sss') = runState (f v) s' in (g vvv) sss'))
+
+LE PONEMOS EL MISMO NOMBRE A LAS COSAS QUE SON LO MISMO
+(vv :!: ss' en 1| es lo mismo que v :!: s' en 2|. LES PONEMOS LOS MISMOS NOMBRES (v :!: s'))
+
+1| State (\s -> let papo :!: pepo = (let v :!: s' = runState t s in runState (f v) s') in runState (g papo) pepo)
+2| State (\s -> let (v :!: s') = runState t s in runState (let ( vvv :!: sss' ) = runState (f v) s' in (g vvv) sss'))
+
+papo :!: pepo en 1| es lo mismo que vvv :!: sss' en 2|. les dejamos papopepo
+
+1| State (\s -> let papo :!: pepo = (let v :!: s' = runState t s in runState (f v) s') in runState (g papo) pepo)
+2| State (\s -> let (v :!: s') = runState t s in runState (let ( papo :!: pepo ) = runState (f v) s' in (g papo) pepo))
+
+SI DEJAMOS SOLO LOS IN
+
+1| State (\s -> runState (g papo) pepo)
+2| State (\s -> runState (g papo) pepo)
+

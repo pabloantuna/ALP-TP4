@@ -36,7 +36,12 @@ instance Applicative StateError where
 -- Ejercicio 2.a: Dar una instancia de Monad para StateError:
 instance Monad StateError where
   return x = StateError (\s -> Right (x :!: s))
-  m >>= f = StateError (\s -> runStateError m s >>= \(v :!: s') -> runStateError (f v) s')
+  m >>= f =
+    StateError
+      (\s -> do
+        (a :!: e) <- runStateError m s
+        (b :!: e') <- runStateError (f a) e
+        return $ b :!: e')
 
 -- Ejercicio 2.b: Dar una instancia de MonadError para StateError:
 instance MonadError StateError where
@@ -44,10 +49,10 @@ instance MonadError StateError where
 
 -- Ejercicio 2.c: Dar una instancia de MonadState para StateError:
 instance MonadState StateError where
-  lookfor v = StateError (\s -> case M.lookup v s of
-                                  Nothing -> Left UndefVar
-                                  Just x -> Right (x :!: s))
-  update v i = StateError (\s -> Right (() :!: update' v i s)) where update' = M.insert
+  lookfor v = StateError $ lookfor' v
+    where
+      lookfor' v s = maybe (Left UndefVar) (Right . (:!: s)) $ M.lookup v s
+  update v i = StateError (\s -> Right (() :!: M.insert v i s))
 
 
 -- Ejercicio 2.d: Implementar el evaluador utilizando la monada StateError.
